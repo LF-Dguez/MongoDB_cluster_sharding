@@ -1,0 +1,10 @@
+# LaTeX
+reporte/*.aux
+reporte/*.log
+reporte/*.toc
+reporte/*.out
+reporte/*.bbl
+reporte/*.blg
+reporte/*.synctex.gz
+reporte/*.fdb_latexmk
+reporte/*.fls
