@@ -12,7 +12,7 @@
 |---|---|---|
 | Osvaldo Hernández Juárez | 385493 | Pasos 1–3: estructura del repo y Docker Compose |
 | Luis Felipe Domínguez Chávez | 385500 | Pasos 4–7: configuración del cluster, shard key, carga de datos y plantilla del reporte |
-| Diego Flores Verdad Grijalva | 385660 | Paso 8: operaciones CRUD y verificación de la distribución |
+| Diego Flores Verdad Grijalva | 385660 | Paso 8: operaciones CRUD, verificación de la distribución y todas las capturas de Docker (sección 7.1) |
 
 **Repositorio:** https://github.com/LF-Dguez/MongoDB_cluster_sharding
 
@@ -160,8 +160,8 @@ MongoDB_cluster_sharding/
 - [x] **Paso 5** — Registrar los shards en `mongos`: `03-add-shards.js` (Luis Felipe).
 - [x] **Paso 6** — Documento de usuarios y shard key (Luis Felipe).
 - [x] **Paso 7** — Shardear la colección y cargar datos: `04-shard-collection.js`, `05-cargar-usuarios.js` (Luis Felipe).
-- [ ] **Paso 8** — Operaciones CRUD y verificar distribución ← **siguiente, Diego** (sección 7).
-- [ ] **Paso 9** — Reporte: secciones 1 a 6 y conclusión ya escritas (Luis Felipe); falta la sección CRUD (Diego), compilar el PDF y subirlo.
+- [ ] **Paso 8** — Operaciones CRUD, verificar distribución y capturas ← **siguiente, Diego** (sección 7).
+- [ ] **Paso 9** — Reporte: secciones 1 a 6 y conclusión ya escritas (Luis Felipe); faltan las capturas 01–13 y la sección CRUD (Diego, sección 7.1), compilar el PDF y subirlo.
 
 ---
 
@@ -191,10 +191,49 @@ Si ya tenías el cluster levantado con el compose anterior (puerto 27017), corre
    - **Update:** `updateOne` (por `idUsuario`) y `updateMany`.
    - **Delete:** `deleteOne` (por `idUsuario`) y `deleteMany`.
    - **Distribución:** `db.usuarios.getShardDistribution()` y `sh.status()` al final.
-3. Tomar capturas de cada script y guardarlas en `reporte/img/` numeradas desde **08** (`08-create.png`, `09-read.png`, …). Las 01–07 son de la configuración.
+3. Tomar las capturas siguiendo la **sección 7.1**.
 4. Llenar la sección "Realizar operaciones CRUD…" de `reporte/main.tex`: ahí hay recuadros `\pendiente{...}` y un comentario con el formato. Quitar los `\pendiente` al terminar y agregar una o dos oraciones de CRUD en la conclusión (hay un comentario marcando dónde).
 5. Completar la sección "Operaciones CRUD" del `README.md`.
 6. Commits uno por paso (por ejemplo: un commit por cada script CRUD y uno para el reporte).
+
+### 7.1 Guía de capturas
+
+El reporte ya espera estas imágenes con estos nombres exactos (`reporte/main.tex` usa `\captura{nombre.png}`). Si una falta, el PDF muestra un recuadro con el nombre del archivo.
+
+**Antes de empezar:**
+- Docker Desktop abierto y con **Engine running**.
+- Una sola ventana de **PowerShell, maximizada**, que no se mueva ni cambie de tamaño entre capturas (así todas quedan del mismo ancho).
+- Correr `cls` antes de cada comando, para que la captura muestre solo ese paso.
+- Capturar **solo la ventana de la terminal** (Win + Shift + S → ventana), con el comando y su salida completa.
+- Guardar cada imagen en `reporte/img/` con el nombre indicado, en PNG.
+- Si una salida no cabe en una pantalla, partirla en varias con sufijo: `07a-sh-status.png`, `07b-sh-status.png` (y avisar en el commit para ajustar el `\captura` del reporte).
+- Si un comando marca error o el resultado no coincide con lo esperado, **no seguir**: copiar el error y avisar al equipo.
+
+**Capturas de configuración (01–07).** Se toman sobre un cluster recién creado. Si ya lo habías levantado antes, empieza desde cero con `docker compose down -v` (borra los datos).
+
+| Captura | Comando (desde la raíz del repo) | Qué debe verse |
+|---|---|---|
+| `01-compose.png` | `docker compose up -d` y luego `docker compose ps` (los dos en la misma captura) | Red, 4 volúmenes y 5 contenedores creados; en `ps`, los 5 en `Up` y `mongos` con `0.0.0.0:27030->27017` |
+| `02-init-configsvr.png` | `docker exec mongos mongosh --nodb --quiet --file /scripts/configuracion/01-init-configsvr.js` | `configReplSet: replica set iniciado` y `configsvr:27017  PRIMARY` |
+| `03-init-shards.png` | `docker exec mongos mongosh --nodb --quiet --file /scripts/configuracion/02-init-shards.js` | Los 3 replica sets iniciados, cada uno con su miembro `PRIMARY` |
+| `04-add-shards.png` | `docker exec mongos mongosh --quiet --file /scripts/configuracion/03-add-shards.js` | Tres `addShard ...: ok 1` y la lista de los 3 shards registrados |
+| `05-shard-collection.png` | `docker exec mongos mongosh --quiet --file /scripts/configuracion/04-shard-collection.js` | Colección creada con validador, `collectionsharded: 'bdcluster.usuarios'` y al menos 1 chunk en cada shard |
+| `06-carga-usuarios.png` | `docker exec mongos mongosh --quiet --file /scripts/configuracion/05-cargar-usuarios.js` | `Usuarios en bdcluster.usuarios: 3000` y los 3 shards con alrededor de 1000 documentos cada uno |
+| `07-sh-status.png` | `docker exec -it mongos mongosh --quiet --eval "sh.status()"` | Los 3 shards, la base `bdcluster` y `usuarios` con `shardKey: { idUsuario: 'hashed' }` y sus chunks por shard |
+
+**Capturas de CRUD (08 en adelante).** Se toman después de la carga de usuarios, ejecutando cada script con:
+`docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/<archivo>.js`
+
+| Captura | Script | Qué debe verse |
+|---|---|---|
+| `08-create.png` | `create.js` | Resultado de `insertOne` e `insertMany` (ids insertados) y el conteo final de documentos |
+| `09-read.png` | `read.js` | Consultas por `idUsuario` y por otro campo, con sus resultados |
+| `10-explain.png` | `read.js` (o un script aparte) | `explain()`: la consulta por `idUsuario` con `SINGLE_SHARD` y la otra con `SHARD_MERGE` |
+| `11-update.png` | `update.js` | `matchedCount` / `modifiedCount` de `updateOne` y `updateMany`, y el documento ya modificado |
+| `12-delete.png` | `delete.js` | `deletedCount` de `deleteOne` y `deleteMany` y el conteo final |
+| `13-distribucion.png` | `docker exec mongos mongosh bdcluster --quiet --eval "db.usuarios.getShardDistribution()"` | Documentos y porcentaje de datos en cada shard después del CRUD |
+
+Al terminar, `reporte/img/` debe tener de la 01 a la 13. Después se compila el reporte con XeLaTeX (sección 8) y se revisa que no quede ningún recuadro de captura faltante ni ningún `\pendiente`.
 
 ---
 
