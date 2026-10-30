@@ -1,0 +1,424 @@
+\documentclass[12pt]{article}
+
+% ============================================================
+%  PAQUETES
+% ============================================================
+\usepackage[spanish]{babel}
+
+% ------------------------------------------------------------
+%  TIPOGRAFÍA: Arial en el texto, monoespaciada en el código
+%  IMPORTANTE: este archivo se compila con XeLaTeX o LuaLaTeX,
+%  no con pdfLaTeX. En Overleaf: Menu > Compiler > XeLaTeX.
+%  Si Arial no está instalado se usa Liberation Sans, que tiene
+%  exactamente las mismas métricas y no altera la paginación.
+% ------------------------------------------------------------
+\usepackage{fontspec}
+\IfFontExistsTF{Arial}{%
+  \setmainfont{Arial}%
+  \setsansfont{Arial}%
+}{%
+  \setmainfont{Liberation Sans}%
+  \setsansfont{Liberation Sans}%
+}
+\IfFontExistsTF{Consolas}{%
+  \setmonofont{Consolas}[Scale=MatchLowercase]%
+}{%
+  \setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]%
+}
+
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{graphicx}          % Imágenes
+\usepackage{float}             % Anclaje de figuras con [H]
+\usepackage{enumitem}          % Control de listas
+\usepackage{needspace}         % Evita separar un bloque de su captura
+\usepackage{tocloft}           % Ancho de la numeración en el índice
+\setlength{\cftsecnumwidth}{2em}
+\setlength{\cftsubsecnumwidth}{2.8em}
+\usepackage{xcolor}            % Colores
+\usepackage{listings}          % Bloques de código
+\usepackage{fancyhdr}          % Encabezado y pie de página
+\usepackage{titlesec}          % Estilo de títulos de sección
+\usepackage{microtype}         % Mejor justificación / tipografía
+\usepackage{setspace}          % Interlineado
+\onehalfspacing                % Interlineado 1.5 en todo el documento
+\usepackage[font=small, labelfont={bf,color=purple-uach}]{caption}
+\usepackage[hidelinks]{hyperref} % Enlaces e índice clicable
+\usepackage{xurl}
+\urlstyle{same}
+
+\captionsetup{font={small,stretch=1.0}}    % pies de figura a renglón sencillo
+
+\graphicspath{{img/}{./}}
+
+% ============================================================
+%  COLORES
+% ============================================================
+\definecolor{purple-uach}{HTML}{371e49}
+
+% ============================================================
+%  DATOS DE LA TAREA
+% ============================================================
+\newcommand{\alumnoUno}{Osvaldo Hernández Juarez}
+\newcommand{\matriculaUno}{385493}
+\newcommand{\alumnoDos}{Diego Flores Verdad Grijalva}
+\newcommand{\matriculaDos}{385660}
+\newcommand{\alumnoTres}{Luis Felipe Domínguez Chávez}
+\newcommand{\matriculaTres}{385500}
+\newcommand{\materia}{Bases de Datos Avanzadas}
+\newcommand{\docente}{José Saúl De Lira Miramontes}
+\newcommand{\grupoCarrera}{Grupo 5k2}
+\newcommand{\actividad}{Actividad 1: MongoDB Cluster}
+% Versión de la portada, con el salto de renglón donde se ve mejor.
+\newcommand{\actividadPortada}{Actividad 1:\\ MongoDB Cluster}
+\newcommand{\fechaEntrega}{29 de octubre de 2026}
+
+\hypersetup{
+    pdftitle={\actividad},
+    pdfauthor={\alumnoUno, \alumnoDos, \alumnoTres},
+    pdfsubject={\materia}
+}
+
+% ============================================================
+%  ESTILO DE TÍTULOS DE SECCIÓN
+% ============================================================
+\titleformat{\section}
+  {\large\bfseries\color{purple-uach}}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{purple-uach}}{\thesubsection}{1em}{}
+\titlespacing*{\section}{0pt}{2.4ex plus 1ex minus .2ex}{1.2ex plus .2ex}
+
+% ============================================================
+%  PIE DE PÁGINA
+% ============================================================
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyfoot[R]{\thepage}
+
+% ============================================================
+%  ESTILO DE BLOQUES DE CÓDIGO
+% ============================================================
+\lstdefinelanguage{mongosh}{
+    morekeywords={db,sh,rs,const,let,new,find,findOne,insertOne,insertMany,updateOne,updateMany,deleteOne,deleteMany,countDocuments,aggregate,runCommand,getSiblingDB,createCollection,drop,print,printjson},
+    morestring=[b]",
+    morestring=[b]',
+    morecomment=[l]{//},
+    sensitive=true
+}
+
+\lstdefinestyle{codeStyle}{
+    backgroundcolor=\color{gray!8},
+    commentstyle=\color{purple-uach!70},
+    keywordstyle=\color{purple-uach}\bfseries,
+    stringstyle=\color{teal},
+    basicstyle=\setstretch{1}\ttfamily\footnotesize,
+    breaklines=true,
+    breakatwhitespace=false,
+    frame=single,
+    rulecolor=\color{gray!40},
+    tabsize=2,
+    captionpos=b,
+    aboveskip=1.2ex,
+    belowskip=1.2ex
+}
+\lstset{style=codeStyle, language=mongosh}
+\lstdefinestyle{pyStyle}{style=codeStyle, language=Python, showstringspaces=false, morekeywords={self,None,True,False}}
+\lstdefinestyle{plainStyle}{style=codeStyle, language={}, showstringspaces=false}
+
+
+% ============================================================
+%  CAPTURAS Y PENDIENTES
+% ============================================================
+% \captura{archivo}{pie de figura}{ancho}: si la imagen todavía no está en
+% img/, se muestra un recuadro con el nombre del archivo que falta.
+\newcommand{\captura}[3]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{img/#1}{%
+      \includegraphics[width=#3\linewidth]{#1}%
+    }{%
+      \fbox{\parbox[c][2.5cm][c]{0.8\linewidth}{\centering\small\color{gray}Falta la captura \texttt{img/#1}}}%
+    }
+    \caption{#2}
+  \end{figure}}
+% \pendiente{texto}: aviso visible de algo que falta; quitarlo antes de entregar.
+\newcommand{\pendiente}[1]{%
+  \par\noindent\fcolorbox{purple-uach}{purple-uach!6}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\small\textbf{Pendiente:} #1}}\par}
+
+\lstdefinestyle{jsStyle}{style=codeStyle, language=mongosh, showstringspaces=false, morecomment=[s]{/*}{*/}, morestring=[b]`}
+
+\emergencystretch=1.5em
+
+% ============================================================
+\begin{document}
+
+% ---------------- PORTADA ----------------
+\begin{titlepage}
+\singlespacing
+\centering
+\noindent
+\begin{minipage}[c]{0.5\linewidth}
+    \raggedright
+    \includegraphics[height=4.5cm]{logo-uach.png}
+\end{minipage}%
+\begin{minipage}[c]{0.5\linewidth}
+    \raggedleft
+    \includegraphics[height=4.5cm]{logo-fing.png}
+\end{minipage}\\[1.2cm]
+{\Large \textbf{Universidad Autónoma de Chihuahua}}\\[0.2cm]
+{\large Facultad de Ingeniería}\\[0.2cm]
+{\normalsize \grupoCarrera}\\[2cm]
+
+{\color{purple-uach}\rule{\linewidth}{0.6mm}}\\[0.5cm]
+{\huge \bfseries \linespread{1.25}\selectfont \actividadPortada\par}\vspace{0.5cm}
+{\color{purple-uach}\rule{\linewidth}{0.6mm}}\\[1.5cm]
+
+{\Large \materia}\\[0.3cm]
+{\large Docente: \docente}
+
+\vfill
+
+\begin{flushright}
+    \large
+    \textbf{\alumnoUno}\\
+    Matrícula: \matriculaUno\\[0.4cm]
+    \textbf{\alumnoDos}\\
+    Matrícula: \matriculaDos\\[0.4cm]
+    \textbf{\alumnoTres}\\
+    Matrícula: \matriculaTres
+\end{flushright}
+
+\vspace{1cm}
+{\large \fechaEntrega}
+
+\end{titlepage}
+
+
+% ---------------- ÍNDICE ----------------
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Introducción}
+
+En la actividad anterior se revisó en teoría la arquitectura de MongoDB como sistema distribuido. En esta práctica se puso en funcionamiento esa arquitectura: se configuró un Sharded Cluster sobre Docker con un config server, tres shards y un router mongos, se definió la estructura de una colección de usuarios y su shard key, y se realizaron operaciones CRUD sobre la base de datos distribuida a través del router.
+
+Los archivos de la práctica (Docker Compose, scripts de configuración y operaciones CRUD) se encuentran en el repositorio \url{https://github.com/LF-Dguez/MongoDB_cluster_sharding}.
+
+% ============================================================
+\section{Objetivo}
+
+Implementar soluciones para Bases de Datos Distribuidas.
+
+% ============================================================
+\section{Entorno de trabajo}
+
+La práctica se realizó en Windows 11 con Docker Desktop y Docker Compose v2. Los cinco nodos usan la imagen oficial \texttt{mongo:8.0}. Los scripts de configuración y de CRUD se escribieron en JavaScript y se ejecutaron con el \texttt{mongosh} que incluye la imagen, dentro del contenedor del router.
+
+% ============================================================
+\section{Configurar un Cluster en Mongo sobre Docker con los siguientes nodos: configsvr, shard1, shard2, shard3, mongos router}
+
+\subsection{Arquitectura}
+
+El cluster tiene tres tipos de nodo, cada uno en su propio contenedor:
+
+\begin{itemize}[itemsep=2pt, topsep=4pt]
+    \item \texttt{configsvr}: guarda los metadatos del cluster, como la lista de shards y los rangos de datos (chunks) que tiene cada uno.
+    \item \texttt{shard1}, \texttt{shard2} y \texttt{shard3}: guardan los documentos. Cada uno contiene solo una parte de la colección.
+    \item \texttt{mongos}: es el router. Las aplicaciones se conectan a él, y él consulta al config server para saber a qué shard enviar cada operación. No guarda datos.
+\end{itemize}
+
+MongoDB exige que el config server y cada shard sean un replica set. Como la actividad pide exactamente cinco nodos, cada replica set tiene un solo miembro. En un entorno de producción cada uno tendría al menos tres para tener alta disponibilidad.
+
+\subsection{Docker Compose}
+
+Los cinco nodos se definieron en el archivo \texttt{docker-compose.yaml}:
+
+\lstinputlisting[style=plainStyle]{../docker-compose.yaml}
+
+Los puntos principales de la configuración son:
+
+\begin{itemize}[itemsep=2pt, topsep=4pt]
+    \item El config server se inicia con \texttt{--configsvr} y los shards con \texttt{--shardsvr}. Cada uno recibe con \texttt{--replSet} el nombre de su replica set.
+    \item Todos escuchan en el puerto 27017 dentro de su contenedor. La opción \texttt{--bind\_ip\_all} hace que acepten conexiones de los demás contenedores. Sin esa opción, cada \texttt{mongod} solo escucharía en su propio localhost.
+    \item El router ejecuta el binario \texttt{mongos}, no \texttt{mongod}, y con \texttt{--configdb} se le indica dónde está el config server.
+    \item Solo \texttt{mongos} se publica hacia el equipo, en el puerto 27030; los shards y el config server quedan ocultos, como en un cluster real. Se usó el 27030 porque el 27017 lo ocupa el MongoDB instalado en Windows.
+    \item Los contenedores comparten la red \texttt{mongo-cluster}, en la que se encuentran por su nombre (\texttt{configsvr}, \texttt{shard1}, etc.).
+    \item Cada nodo de datos tiene su volumen para que la información sobreviva si se recrea el contenedor. Las carpetas \texttt{configuracion} y \texttt{crud} del repositorio se montan en \texttt{mongos}, para ejecutar los scripts con el \texttt{mongosh} de ese contenedor.
+\end{itemize}
+
+\subsection{Levantamiento de los contenedores}
+
+\begin{lstlisting}[style=plainStyle]
+docker compose up -d
+docker compose ps
+\end{lstlisting}
+
+\captura{01-compose.png}{Creación y estado de los cinco contenedores.}{1.0}
+
+Compose creó la red, los volúmenes y los cinco contenedores, que aparecen en ejecución. En este punto los nodos todavía no forman un cluster: hay que inicializar los replica sets y registrar los shards.
+
+\subsection{Inicialización de los replica sets}
+
+El replica set del config server se inicializa con el comando \texttt{replSetInitiate}. El script se ejecuta desde el contenedor de \texttt{mongos} con la opción \texttt{--nodb}, y abre la conexión al config server por su nombre en la red de Docker. El host del miembro se registra como \texttt{configsvr:27017} y no como \texttt{localhost}, porque esa dirección queda guardada en la configuración y es la que usan los demás nodos para conectarse.
+
+\lstinputlisting[style=jsStyle]{../configuracion/01-init-configsvr.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh --nodb --quiet --file /scripts/configuracion/01-init-configsvr.js
+\end{lstlisting}
+
+\captura{02-init-configsvr.png}{Inicialización del replica set del config server.}{0.9}
+
+El script espera a que termine la elección y muestra al único miembro como \texttt{PRIMARY}.
+
+\Needspace{8cm}
+Para los shards el procedimiento es el mismo, con tres diferencias: el nombre del replica set, el host del miembro y que no lleva la opción \texttt{configsvr}.
+
+\lstinputlisting[style=jsStyle]{../configuracion/02-init-shards.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh --nodb --quiet --file /scripts/configuracion/02-init-shards.js
+\end{lstlisting}
+
+\captura{03-init-shards.png}{Inicialización de los replica sets de los tres shards.}{0.9}
+
+Los tres shards quedaron con su miembro como \texttt{PRIMARY}.
+
+\subsection{Registro de los shards}
+
+Con los replica sets listos, los shards se registran desde \texttt{mongos} con \texttt{sh.addShard}. El registro se guarda en el config server, y a partir de ese momento el router sabe a qué nodos puede enviar los datos.
+
+\lstinputlisting[style=jsStyle]{../configuracion/03-add-shards.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh --quiet --file /scripts/configuracion/03-add-shards.js
+\end{lstlisting}
+
+\captura{04-add-shards.png}{Registro de los tres shards en el cluster.}{0.9}
+
+\texttt{listShards} confirma que el cluster tiene los tres shards, cada uno identificado por su replica set.
+
+% ============================================================
+\section{Defina la estructura de la base de datos}
+
+Se eligió una base de datos \texttt{bdcluster} con una colección \texttt{usuarios}. Cada documento representa a un usuario con datos personales, una dirección como subdocumento y una lista de intereses:
+
+\begin{lstlisting}[style=jsStyle]
+{
+  idUsuario: 1,
+  nombre: "Ana",
+  apellido: "Torres",
+  email: "ana.torres1@correo.com",
+  edad: 24,
+  direccion: { ciudad: "Chihuahua", estado: "Chihuahua", pais: "México" },
+  intereses: ["música", "cine"],
+  fechaRegistro: ISODate("2025-03-14"),
+  activo: true
+}
+\end{lstlisting}
+
+La colección se creó con un validador \texttt{\$jsonSchema} (sección \ref{sec:shardkey}) que exige los campos idUsuario, nombre, apellido, email, fechaRegistro y activo, y revisa el tipo de cada campo. Así, aunque MongoDB no obliga a que los documentos tengan la misma estructura, todos los usuarios que se inserten respetan este formato.
+
+% ============================================================
+\section{Definir el Shard Key de la colección}
+\label{sec:shardkey}
+
+La shard key elegida fue \texttt{\{ idUsuario: "hashed" \}}. Los criterios fueron los siguientes:
+
+\begin{itemize}[itemsep=2pt, topsep=4pt]
+    \item Cardinalidad: idUsuario es único, así que tiene tantos valores distintos como usuarios y los datos se pueden dividir en muchos chunks.
+    \item Frecuencia: ningún valor se repite, por lo que no hay chunks que crezcan sin poder dividirse.
+    \item Crecimiento monótono: idUsuario aumenta con cada registro. Con sharding por rangos, todas las inserciones nuevas caerían en el último chunk y en un solo shard. Al aplicar un hash, los valores consecutivos quedan repartidos entre los tres shards.
+    \item Consultas: las operaciones sobre un usuario se hacen por su idUsuario, y con esa condición \texttt{mongos} envía la operación a un solo shard.
+\end{itemize}
+
+La desventaja del hash es que las consultas por rango de idUsuario tienen que ir a todos los shards, pero en esta colección ese tipo de consulta no es la más común. Además, al fragmentar una colección vacía con una shard key hashed, MongoDB reparte los chunks entre los shards desde el inicio. Con sharding por rangos, la colección empieza en un solo shard y el balanceador solo mueve datos cuando la diferencia entre shards es grande, lo que con pocos miles de documentos no ocurriría.
+
+\lstinputlisting[style=jsStyle]{../configuracion/04-shard-collection.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh --quiet --file /scripts/configuracion/04-shard-collection.js
+\end{lstlisting}
+
+\captura{05-shard-collection.png}{Creación y fragmentación de la colección usuarios.}{0.9}
+
+La colección quedó fragmentada y, antes de insertar cualquier documento, cada shard ya tiene asignados sus chunks.
+
+\subsection{Carga de datos}
+
+Para tener datos sobre los cuales probar la distribución, se cargaron 3000 usuarios generados a partir de listas de nombres, apellidos, ciudades e intereses. El generador usa una semilla fija, de modo que siempre produce los mismos documentos.
+
+\lstinputlisting[style=jsStyle]{../configuracion/05-cargar-usuarios.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh --quiet --file /scripts/configuracion/05-cargar-usuarios.js
+\end{lstlisting}
+
+\captura{06-carga-usuarios.png}{Carga de los usuarios y documentos en cada shard.}{0.8}
+
+Los documentos se insertaron a través de \texttt{mongos}, que los envió a cada shard según el hash de su idUsuario. La etapa \texttt{\$collStats} muestra cuántos documentos quedaron en cada uno.
+
+\Needspace{8cm}
+\subsection{Estado del cluster}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec -it mongos mongosh --eval "sh.status()"
+\end{lstlisting}
+
+\captura{07-sh-status.png}{Estado del cluster con \texttt{sh.status()}.}{1.0}
+
+El resultado de \texttt{sh.status()} resume la configuración completa: los tres shards, la base \texttt{bdcluster} y la colección \texttt{usuarios}, con su shard key y el número de chunks en cada shard.
+
+% ============================================================
+\section{Realizar operaciones CRUD sobre la base de datos distribuida}
+
+% ------------------------------------------------------------
+% SECCIÓN A CARGO DE DIEGO. Ver CONTEXTO.md, Paso 8.
+% Por cada operación: el script (\lstinputlisting[style=jsStyle]{../crud/archivo.js}),
+% el comando para ejecutarlo, la captura con \captura{NN-nombre.png}{pie}{ancho}
+% (a partir de 08) y una o dos oraciones sobre el resultado.
+% Al terminar, borrar los \pendiente{...} de esta sección.
+% ------------------------------------------------------------
+
+\subsection{Create}
+\pendiente{inserción de usuarios con \texttt{insertOne} e \texttt{insertMany} a través de mongos (\texttt{crud/create.js}).}
+
+\subsection{Read}
+\pendiente{consultas por idUsuario (un solo shard) y por otros campos (todos los shards), mostrando la diferencia con \texttt{explain()} (\texttt{crud/read.js}).}
+
+\subsection{Update}
+\pendiente{actualizaciones con \texttt{updateOne} y \texttt{updateMany} (\texttt{crud/update.js}).}
+
+\subsection{Delete}
+\pendiente{eliminaciones con \texttt{deleteOne} y \texttt{deleteMany} (\texttt{crud/delete.js}).}
+
+\subsection{Distribución de los datos}
+\pendiente{\texttt{db.usuarios.getShardDistribution()} después de las operaciones CRUD.}
+
+% ============================================================
+\section{Conclusión}
+
+Configurar el cluster mostró que el sharding en MongoDB no depende de un solo servidor sino de la coordinación entre componentes con funciones distintas: los shards guardan los datos, el config server sabe dónde está cada parte y el router dirige las operaciones. Para la aplicación, en cambio, todo eso es transparente, porque se conecta a \texttt{mongos} como si fuera un servidor normal.
+
+La decisión más importante fue la shard key. Un campo con muchos valores distintos que aparece en las consultas más frecuentes permite que el router envíe cada operación al shard correcto, y aplicar un hash evita que un campo creciente concentre las inserciones en un solo shard.
+
+% Agregar aquí una o dos oraciones sobre lo observado en las operaciones CRUD.
+
+% ============================================================
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+
+\begin{list}{}{%
+    \setlength{\leftmargin}{1.27cm}
+    \setlength{\itemindent}{-1.27cm}
+    \setlength{\itemsep}{6pt}
+    \setlength{\parsep}{0pt}}
+\item Borucki, A. (2025). Using replication and sharding. En \textit{MongoDB 8.0 in Action} (3a ed., cap. 9). Manning.
+\item Harsh. (2024). \textit{Setting up MongoDB cluster: Replication, sharding, and high availability}. Medium.
+\item MongoDB, Inc. (s.f.). \textit{Sharding}. MongoDB Manual. \url{https://www.mongodb.com/docs/manual/sharding/}
+\item udaykirankavaturu. (s.f.). \textit{sharding-demo} [Repositorio]. GitHub. \url{https://github.com/udaykirankavaturu/sharding-demo}
+\end{list}
+
+\end{document}
