@@ -59,7 +59,26 @@ Para confirmar que se está hablando con el router y no con otro MongoDB,
 
 ## Operaciones CRUD
 
-_(pendiente)_
+Los scripts de `crud/` se ejecutan igual que los de configuración, pero dentro
+de la base `bdcluster` (con `mongosh bdcluster`, no `--nodb`):
+
+```bash
+docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/create.js
+docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/read.js
+docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/update.js
+docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/delete.js
+```
+
+- `create.js`: inserta un usuario con `insertOne` y tres con `insertMany` (ids 3001–3004), y muestra que un documento incompleto es rechazado por el validador `$jsonSchema`.
+- `read.js`: busca un usuario por `idUsuario` (shard key) y varios por `direccion.pais` e `intereses`, y usa `explain()` para comparar cómo enruta `mongos` cada consulta: la de `idUsuario` llega a un solo shard (`SINGLE_SHARD`), la de otro campo va a los tres (`SHARD_MERGE`).
+- `update.js`: modifica un usuario con `updateOne` (por `idUsuario`) y varios con `updateMany` (por `direccion.pais`).
+- `delete.js`: borra un usuario con `deleteOne` (por `idUsuario`) y el resto de los insertados en `create.js` con `deleteMany`.
+
+Para ver cómo quedó repartida la colección entre los shards después del CRUD:
+
+```bash
+docker exec mongos mongosh bdcluster --quiet --eval "db.usuarios.getShardDistribution()"
+```
 
 ## Estructura
 - `docker-compose.yaml`: definición de los contenedores
