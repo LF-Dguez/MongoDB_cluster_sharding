@@ -377,25 +377,37 @@ El resultado de \texttt{sh.status()} resume la configuración completa: los tres
 % ------------------------------------------------------------
 % SECCIÓN A CARGO DE DIEGO. Ver CONTEXTO.md, Paso 8.
 % Por cada operación: el script (\lstinputlisting[style=jsStyle]{../crud/archivo.js}),
-% el comando para ejecutarlo, la captura con \captura{NN-nombre.png}{pie}{ancho}
-% (a partir de 08) y una o dos oraciones sobre el resultado.
+% el comando para ejecutarlo, la captura (los \captura de 08 a 13 ya están
+% abajo; solo ajustar el ancho) y una o dos oraciones sobre el resultado.
 % Al terminar, borrar los \pendiente{...} de esta sección.
 % ------------------------------------------------------------
 
 \subsection{Create}
 \pendiente{inserción de usuarios con \texttt{insertOne} e \texttt{insertMany} a través de mongos (\texttt{crud/create.js}).}
 
+\captura{08-create.png}{Inserción de usuarios a través de mongos.}{0.9}
+
 \subsection{Read}
 \pendiente{consultas por idUsuario (un solo shard) y por otros campos (todos los shards), mostrando la diferencia con \texttt{explain()} (\texttt{crud/read.js}).}
+
+\captura{09-read.png}{Consultas sobre la colección usuarios.}{0.9}
+
+\captura{10-explain.png}{Plan de ejecución de una consulta por idUsuario y de una consulta por otro campo.}{0.9}
 
 \subsection{Update}
 \pendiente{actualizaciones con \texttt{updateOne} y \texttt{updateMany} (\texttt{crud/update.js}).}
 
+\captura{11-update.png}{Actualización de usuarios.}{0.9}
+
 \subsection{Delete}
 \pendiente{eliminaciones con \texttt{deleteOne} y \texttt{deleteMany} (\texttt{crud/delete.js}).}
 
+\captura{12-delete.png}{Eliminación de usuarios.}{0.9}
+
 \subsection{Distribución de los datos}
 \pendiente{\texttt{db.usuarios.getShardDistribution()} después de las operaciones CRUD.}
+
+\captura{13-distribucion.png}{Distribución de los documentos entre los shards.}{0.9}
 
 % ============================================================
 \section{Conclusión}
