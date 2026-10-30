@@ -255,7 +255,7 @@ docker compose up -d
 docker compose ps
 \end{lstlisting}
 
-\captura{01-compose.png}{Creación y estado de los cinco contenedores.}{1.0}
+\captura{01-compose.jpg}{Creación y estado de los cinco contenedores.}{1.0}
 
 Compose creó la red, los volúmenes y los cinco contenedores, que aparecen en ejecución. En este punto los nodos todavía no forman un cluster: hay que inicializar los replica sets y registrar los shards.
 
@@ -269,7 +269,7 @@ El replica set del config server se inicializa con el comando \texttt{replSetIni
 docker exec mongos mongosh --nodb --quiet --file /scripts/configuracion/01-init-configsvr.js
 \end{lstlisting}
 
-\captura{02-init-configsvr.png}{Inicialización del replica set del config server.}{0.9}
+\captura{02-init-configsvr.jpg}{Inicialización del replica set del config server.}{0.9}
 
 El script espera a que termine la elección y muestra al único miembro como \texttt{PRIMARY}.
 
@@ -282,7 +282,7 @@ Para los shards el procedimiento es el mismo, con tres diferencias: el nombre de
 docker exec mongos mongosh --nodb --quiet --file /scripts/configuracion/02-init-shards.js
 \end{lstlisting}
 
-\captura{03-init-shards.png}{Inicialización de los replica sets de los tres shards.}{0.9}
+\captura{03-init-shards.jpg}{Inicialización de los replica sets de los tres shards.}{0.9}
 
 Los tres shards quedaron con su miembro como \texttt{PRIMARY}.
 
@@ -296,7 +296,7 @@ Con los replica sets listos, los shards se registran desde \texttt{mongos} con \
 docker exec mongos mongosh --quiet --file /scripts/configuracion/03-add-shards.js
 \end{lstlisting}
 
-\captura{04-add-shards.png}{Registro de los tres shards en el cluster.}{0.9}
+\captura{04-add-shards.jpg}{Registro de los tres shards en el cluster.}{0.9}
 
 \texttt{listShards} confirma que el cluster tiene los tres shards, cada uno identificado por su replica set.
 
@@ -342,7 +342,7 @@ La desventaja del hash es que las consultas por rango de idUsuario tienen que ir
 docker exec mongos mongosh --quiet --file /scripts/configuracion/04-shard-collection.js
 \end{lstlisting}
 
-\captura{05-shard-collection.png}{Creación y fragmentación de la colección usuarios.}{0.9}
+\captura{05-shard-collection.jpg}{Creación y fragmentación de la colección usuarios.}{0.9}
 
 La colección quedó fragmentada y, antes de insertar cualquier documento, cada shard ya tiene asignados sus chunks.
 
@@ -356,7 +356,7 @@ Para tener datos sobre los cuales probar la distribución, se cargaron 3000 usua
 docker exec mongos mongosh --quiet --file /scripts/configuracion/05-cargar-usuarios.js
 \end{lstlisting}
 
-\captura{06-carga-usuarios.png}{Carga de los usuarios y documentos en cada shard.}{0.8}
+\captura{06-carga-usuarios.jpg}{Carga de los usuarios y documentos en cada shard.}{0.8}
 
 Los documentos se insertaron a través de \texttt{mongos}, que los envió a cada shard según el hash de su idUsuario. La etapa \texttt{\$collStats} muestra cuántos documentos quedaron en cada uno.
 
@@ -367,7 +367,7 @@ Los documentos se insertaron a través de \texttt{mongos}, que los envió a cada
 docker exec -it mongos mongosh --eval "sh.status()"
 \end{lstlisting}
 
-\captura{07-sh-status.png}{Estado del cluster con \texttt{sh.status()}.}{1.0}
+\captura{07-sh-status.jpg}{Estado del cluster con \texttt{sh.status()}.}{1.0}
 
 El resultado de \texttt{sh.status()} resume la configuración completa: los tres shards, la base \texttt{bdcluster} y la colección \texttt{usuarios}, con su shard key y el número de chunks en cada shard.
 
@@ -386,7 +386,7 @@ Se insertó un usuario con \texttt{insertOne} y tres más con \texttt{insertMany
 docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/create.js
 \end{lstlisting}
 
-\captura{08-create.png}{Inserción de usuarios a través de mongos.}{0.9}
+\captura{08-create.jpg}{Inserción de usuarios a través de mongos.}{0.9}
 
 Las dos inserciones quedaron reconocidas (\texttt{acknowledged: true}) y el documento incompleto fue rechazado con el error de validación, por lo que el total pasó de 3000 a 3004 usuarios.
 
@@ -400,9 +400,9 @@ Se hicieron dos tipos de consulta: una por \texttt{idUsuario} (la shard key) y o
 docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/read.js
 \end{lstlisting}
 
-\captura{09-read.png}{Consultas sobre la colección usuarios.}{0.9}
+\captura{09-read.jpg}{Consultas sobre la colección usuarios.}{0.9}
 
-\captura{10-explain.png}{Plan de ejecución de una consulta por idUsuario y de una consulta por otro campo.}{0.9}
+\captura{10-explain.jpg}{Plan de ejecución de una consulta por idUsuario y de una consulta por otro campo.}{0.9}
 
 El \texttt{explain()} confirma la diferencia esperada: la consulta por \texttt{idUsuario} resuelve con \texttt{winningPlan.stage: "SINGLE\_SHARD"}, porque \texttt{mongos} calcula el hash y sabe en qué shard buscar, mientras que la consulta por \texttt{direccion.pais} resuelve con \texttt{"SHARD\_MERGE"}, porque el router tiene que preguntarle a los tres shards y combinar los resultados.
 
@@ -416,7 +416,7 @@ Se actualizó un usuario con \texttt{updateOne} (por \texttt{idUsuario}) y vario
 docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/update.js
 \end{lstlisting}
 
-\captura{11-update.png}{Actualización de usuarios.}{0.9}
+\captura{11-update.jpg}{Actualización de usuarios.}{0.9}
 
 El \texttt{updateOne} modificó el único documento con ese \texttt{idUsuario} (\texttt{matchedCount: 1}, \texttt{modifiedCount: 1}). El \texttt{updateMany} encontró 310 usuarios con \texttt{direccion.pais: "Colombia"} y modificó 236; los otros 74 ya tenían el valor que se quería asignar, así que no contaron como modificados.
 
@@ -430,7 +430,7 @@ Se borró un usuario con \texttt{deleteOne} (por \texttt{idUsuario}) y el resto 
 docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/delete.js
 \end{lstlisting}
 
-\captura{12-delete.png}{Eliminación de usuarios.}{0.9}
+\captura{12-delete.jpg}{Eliminación de usuarios.}{0.9}
 
 El \texttt{deleteOne} borró un documento y el \texttt{deleteMany} los tres restantes, con lo que la colección regresó a los 3000 usuarios de la carga inicial.
 
@@ -440,7 +440,7 @@ El \texttt{deleteOne} borró un documento y el \texttt{deleteMany} los tres rest
 docker exec mongos mongosh bdcluster --quiet --eval "db.usuarios.getShardDistribution()"
 \end{lstlisting}
 
-\captura{13-distribucion.png}{Distribución de los documentos entre los shards.}{0.9}
+\captura{13-distribucion.jpg}{Distribución de los documentos entre los shards.}{0.9}
 
 Después de las operaciones CRUD, los 3000 documentos siguen repartidos de forma pareja entre los tres shards (alrededor del 33\% en cada uno), lo mismo que después de la carga inicial, porque las inserciones y eliminaciones de esta sección se cancelaron entre sí.
 
