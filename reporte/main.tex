@@ -374,40 +374,75 @@ El resultado de \texttt{sh.status()} resume la configuración completa: los tres
 % ============================================================
 \section{Realizar operaciones CRUD sobre la base de datos distribuida}
 
-% ------------------------------------------------------------
-% SECCIÓN A CARGO DE DIEGO. Ver CONTEXTO.md, Paso 8.
-% Por cada operación: el script (\lstinputlisting[style=jsStyle]{../crud/archivo.js}),
-% el comando para ejecutarlo, la captura (los \captura de 08 a 13 ya están
-% abajo; solo ajustar el ancho) y una o dos oraciones sobre el resultado.
-% Al terminar, borrar los \pendiente{...} de esta sección.
-% ------------------------------------------------------------
+Las operaciones CRUD se hicieron con \texttt{mongosh} conectado a \texttt{mongos}, sobre la base \texttt{bdcluster}. Al pasar por el router, cada operación se enruta de forma transparente al shard (o shards) correspondiente sin que el script tenga que saber en cuál vive cada documento.
 
 \subsection{Create}
-\pendiente{inserción de usuarios con \texttt{insertOne} e \texttt{insertMany} a través de mongos (\texttt{crud/create.js}).}
+
+Se insertó un usuario con \texttt{insertOne} y tres más con \texttt{insertMany}, todos con \texttt{idUsuario} mayor a 3000 para no chocar con la carga inicial. También se intentó insertar un documento incompleto para comprobar que el validador \texttt{\$jsonSchema} de la colección lo rechaza.
+
+\lstinputlisting[style=jsStyle]{../crud/create.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/create.js
+\end{lstlisting}
 
 \captura{08-create.png}{Inserción de usuarios a través de mongos.}{0.9}
 
+Las dos inserciones quedaron reconocidas (\texttt{acknowledged: true}) y el documento incompleto fue rechazado con el error de validación, por lo que el total pasó de 3000 a 3004 usuarios.
+
 \subsection{Read}
-\pendiente{consultas por idUsuario (un solo shard) y por otros campos (todos los shards), mostrando la diferencia con \texttt{explain()} (\texttt{crud/read.js}).}
+
+Se hicieron dos tipos de consulta: una por \texttt{idUsuario} (la shard key) y otras por \texttt{direccion.pais} e \texttt{intereses}, que no forman parte de la shard key.
+
+\lstinputlisting[style=jsStyle]{../crud/read.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/read.js
+\end{lstlisting}
 
 \captura{09-read.png}{Consultas sobre la colección usuarios.}{0.9}
 
 \captura{10-explain.png}{Plan de ejecución de una consulta por idUsuario y de una consulta por otro campo.}{0.9}
 
+El \texttt{explain()} confirma la diferencia esperada: la consulta por \texttt{idUsuario} resuelve con \texttt{winningPlan.stage: "SINGLE\_SHARD"}, porque \texttt{mongos} calcula el hash y sabe en qué shard buscar, mientras que la consulta por \texttt{direccion.pais} resuelve con \texttt{"SHARD\_MERGE"}, porque el router tiene que preguntarle a los tres shards y combinar los resultados.
+
 \subsection{Update}
-\pendiente{actualizaciones con \texttt{updateOne} y \texttt{updateMany} (\texttt{crud/update.js}).}
+
+Se actualizó un usuario con \texttt{updateOne} (por \texttt{idUsuario}) y varios con \texttt{updateMany} (por \texttt{direccion.pais}).
+
+\lstinputlisting[style=jsStyle]{../crud/update.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/update.js
+\end{lstlisting}
 
 \captura{11-update.png}{Actualización de usuarios.}{0.9}
 
+El \texttt{updateOne} modificó el único documento con ese \texttt{idUsuario} (\texttt{matchedCount: 1}, \texttt{modifiedCount: 1}). El \texttt{updateMany} encontró 310 usuarios con \texttt{direccion.pais: "Colombia"} y modificó 236; los otros 74 ya tenían el valor que se quería asignar, así que no contaron como modificados.
+
 \subsection{Delete}
-\pendiente{eliminaciones con \texttt{deleteOne} y \texttt{deleteMany} (\texttt{crud/delete.js}).}
+
+Se borró un usuario con \texttt{deleteOne} (por \texttt{idUsuario}) y el resto de los usuarios insertados en \texttt{create.js} con \texttt{deleteMany}.
+
+\lstinputlisting[style=jsStyle]{../crud/delete.js}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh bdcluster --quiet --file /scripts/crud/delete.js
+\end{lstlisting}
 
 \captura{12-delete.png}{Eliminación de usuarios.}{0.9}
 
+El \texttt{deleteOne} borró un documento y el \texttt{deleteMany} los tres restantes, con lo que la colección regresó a los 3000 usuarios de la carga inicial.
+
 \subsection{Distribución de los datos}
-\pendiente{\texttt{db.usuarios.getShardDistribution()} después de las operaciones CRUD.}
+
+\begin{lstlisting}[style=plainStyle]
+docker exec mongos mongosh bdcluster --quiet --eval "db.usuarios.getShardDistribution()"
+\end{lstlisting}
 
 \captura{13-distribucion.png}{Distribución de los documentos entre los shards.}{0.9}
+
+Después de las operaciones CRUD, los 3000 documentos siguen repartidos de forma pareja entre los tres shards (alrededor del 33\% en cada uno), lo mismo que después de la carga inicial, porque las inserciones y eliminaciones de esta sección se cancelaron entre sí.
 
 % ============================================================
 \section{Conclusión}
@@ -416,7 +451,7 @@ Configurar el cluster mostró que el sharding en MongoDB no depende de un solo s
 
 La decisión más importante fue la shard key. Un campo con muchos valores distintos que aparece en las consultas más frecuentes permite que el router envíe cada operación al shard correcto, y aplicar un hash evita que un campo creciente concentre las inserciones en un solo shard.
 
-% Agregar aquí una o dos oraciones sobre lo observado en las operaciones CRUD.
+En las operaciones CRUD esa transparencia se confirmó: los mismos comandos de \texttt{insertOne}, \texttt{find}, \texttt{updateOne} y \texttt{deleteOne} que se usarían contra un solo servidor funcionaron igual contra el cluster. La diferencia solo se hizo visible con \texttt{explain()}, al comparar una consulta por la shard key (un solo shard) contra una por otro campo (los tres shards).
 
 % ============================================================
 \section*{Referencias}
